@@ -1,0 +1,84 @@
+<html>
+<head>
+	<title>Crawler</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body onload="hideLoad()">
+
+	<div class="content">
+		<div class="input" id="formID">
+			<p class="title">Web Crawler</p>
+			<p class="name">by: Nahiyan Ahmed</p>
+			<form>
+				<input type="text" name="url" placeholder="Ex: https://unsplash.com">
+			</form>
+			<button type="button">Submit!</button>
+		</div>
+		<div class="output">
+			<img id="spinner" src="./images/spinner.svg">
+			<div id="errorMsg" style="font-size: 2rem; color: rgb(255, 40, 40); display: block">Oops, an error has occurred!</div>
+			<ul class="results">
+
+			</ul>
+		</div>
+	</div>
+	<script>
+		var resultList = document.querySelector('ul.results');
+		var urlInput = document.querySelector('input[name=url]')
+
+		apiCallBack = function(xhr, callback) {
+			if (xhr.readyState == XMLHttpRequest.DONE) {
+				document.getElementById('spinner').style.display = 'none'; 
+				if (xhr.status != 200) {
+					document.getElementById('errorMsg').style.display = 'block'; 
+					let message = xhr.status + ":" + xhr.statusText + ":"
+							+ xhr.responseText;
+					throw 'API call returned bad code: ' + xhr.status;
+				}
+				let response = xhr.responseText ? JSON.parse(xhr.responseText)
+						: null;
+				if (callback) {
+					callback(response);
+				}
+			}
+		}
+
+		updateList = function(response) {
+			resultList.innerHTML = '';
+			for (var i = 0; i < response.length; i++) {
+				var img = document.createElement("img");
+				img.width = 100;
+				img.src = response[i];
+				resultList.appendChild(img);
+			}
+		}
+
+		makeApiCall = function(url, method, obj, callback) {
+			let xhr = new XMLHttpRequest();
+			xhr.open(method, url);
+			xhr.onreadystatechange = apiCallBack.bind(null, xhr, callback);
+			xhr.send(obj ? obj instanceof FormData || obj.constructor == String ? obj : JSON.stringify(obj) : null);
+		}
+
+		document.querySelector('button').addEventListener("click", function(event) {
+			event.preventDefault();
+			document.getElementById('spinner').style.display = 'block';
+			document.getElementById('errorMsg').style.display = 'none';
+			document.getElementById('formID').style.minHeight = '500px';
+			makeApiCall('/main?url=' + urlInput.value, 'POST', null, updateList);
+		});
+
+		function hideLoad(){
+			let x = document.getElementById('spinner');
+			document.getElementById('formID').style.height = '75vh';
+			document.getElementById('errorMsg').style.display = 'none';
+			x.style.display = 'none'; 
+			x.style.margin = '0 auto';
+		}
+	</script>
+</body>
+
+</html>
